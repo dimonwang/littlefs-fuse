@@ -1,15 +1,19 @@
-TARGET = lfs
+TARGET_FUSE = lfs_fuse
+TARGET_TEST = lfs_test
 
 OS := $(shell uname -s)
 
 CC = cc
-AR = ar
-SIZE = size
 
 SRC += $(wildcard *.c littlefs/*.c)
-OBJ := $(SRC:.c=.o)
-DEP := $(SRC:.c=.d)
-ASM := $(SRC:.c=.s)
+SRC_FUSE += $(filter-out test.c, $(SRC))
+SRC_TEST += $(filter-out lfs_fuse.c, $(SRC))
+OBJ_FUSE := $(SRC_FUSE:.c=.o)
+OBJ_TEST := $(SRC_TEST:.c=.o)
+DEP_FUSE := $(SRC_FUSE:.c=.d)
+DEP_TEST := $(SRC_TEST:.c=.d)
+ASM_FUSE := $(SRC_FUSE:.c=.s)
+ASM_TEST := $(SRC_TEST:.c=.s)
 
 ifdef DEBUG
 override CFLAGS += -O0 -g3
@@ -33,20 +37,15 @@ override CFLAGS += -D __BSD_VISIBLE
 override LFLAGS += -L /usr/local/lib
 endif
 
-all: $(TARGET)
+all: $(TARGET_FUSE) $(TARGET_TEST)
 
-asm: $(ASM)
+-include $(DEP_FUSE) $(DEP_TEST)
 
-size: $(OBJ)
-	$(SIZE) -t $^
-
--include $(DEP)
-
-$(TARGET): $(OBJ)
+$(TARGET_FUSE): $(OBJ_FUSE)
 	$(CC) $(CFLAGS) $^ $(LFLAGS) -o $@
 
-%.a: $(OBJ)
-	$(AR) rcs $@ $^
+$(TARGET_TEST): $(OBJ_TEST)
+	$(CC) $(CFLAGS) $^ $(LFLAGS) -o $@
 
 %.o: %.c
 	$(CC) -c -MMD $(CFLAGS) $< -o $@
@@ -55,7 +54,7 @@ $(TARGET): $(OBJ)
 	$(CC) -S $(CFLAGS) $< -o $@
 
 clean:
-	rm -f $(TARGET)
-	rm -f $(OBJ)
-	rm -f $(DEP)
-	rm -f $(ASM)
+	rm -f $(TARGET_FUSE) $(TARGET_TEST)
+	rm -f $(OBJ_FUSE) $(OBJ_TEST)
+	rm -f $(DEP_FUSE) $(DEP_TEST)
+	rm -f $(ASM_FUSE) $(ASM_TEST)
