@@ -175,8 +175,9 @@ device while debugging. You can even run xxd from inside gdb using gdb's
 dd if=/dev/loop0 bs=512 count=1 skip=0 | xxd -g1
 ```
 
-Modification Note:
+## Modification Note
 Two operation path:
+
 1, through linux loop device and fuse, add the test files.
 ``` bash
 ./test.sh
